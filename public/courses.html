@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Explore available LearnTrack courses and discover new skills.">
+    <title>Courses — LearnTrack</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <a class="brand" href="/" aria-label="LearnTrack home">
+            <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+                <path d="M9 5V24H23" fill="none" stroke="currentColor"
+                      stroke-width="3.5" stroke-linecap="round"
+                      stroke-linejoin="round"/>
+                <path d="M17 18L23 24L27 17" fill="none"
+                      stroke="currentColor" stroke-width="2.5"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="brand-name">earnTrack</span>
+        </a>
+
+        <nav aria-label="Main navigation">
+            <a href="/">Home</a>
+            <a href="/courses.html" aria-current="page">Courses</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="courses-heading">
+            <p class="eyebrow">COURSE LIBRARY</p>
+            <h1>Explore <span>available courses.</span></h1>
+            <p class="hero-description">
+                Browse structured courses, explore lessons, and strengthen
+                your understanding through practice.
+            </p>
+        </section>
+
+        <section class="courses-section" aria-labelledby="courses-title">
+            <div class="courses-section-heading">
+                <div>
+                    <p class="eyebrow">YOUR LEARNING</p>
+                    <h2 id="courses-title">Available courses</h2>
+                </div>
+                <p id="course-count" class="course-count">Loading courses...</p>
+            </div>
+
+            <div
+                id="course-list"
+                class="course-grid"
+                aria-live="polite"
+                aria-busy="true"
+            >
+                <p class="course-message">Loading courses...</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <a class="brand" href="/" aria-label="LearnTrack home">
+            <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+                <path d="M9 5V24H23" fill="none" stroke="currentColor"
+                      stroke-width="3.5" stroke-linecap="round"
+                      stroke-linejoin="round"/>
+                <path d="M17 18L23 24L27 17" fill="none"
+                      stroke="currentColor" stroke-width="2.5"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="brand-name">earnTrack</span>
+        </a>
+        <p>Learn with purpose.</p>
+    </footer>
+
+    <script src="/js/courses.js" defer></script>
+</body>
+</html>
