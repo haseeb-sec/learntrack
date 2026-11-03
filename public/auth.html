@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sign in or create your LearnTrack account.">
+    <title>Account — LearnTrack</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="auth-page">
+    <header class="site-header">
+        <a class="brand" href="/" aria-label="LearnTrack home">
+            <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+                <path d="M4.5 9.5C8.7 8.2 12.4 9.1 16 12.1V26C12.4 23.1 8.7 22.2 4.5 23.5V9.5Z"
+                      fill="none" stroke="currentColor" stroke-width="2.2"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M27.5 9.5C23.3 8.2 19.6 9.1 16 12.1"
+                      fill="none" stroke="currentColor" stroke-width="2.2"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M16 12.1V26M19.5 7.5L23 4.5L26.5 7.5"
+                      fill="none" stroke="currentColor" stroke-width="2.2"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="brand-name">LearnTrack</span>
+        </a>
+
+        <nav aria-label="Main navigation">
+            <a href="/">Home</a>
+            <a href="/courses.html">Courses</a>
+        </nav>
+    </header>
+
+    <main class="account-layout">
+        <section class="account-intro">
+            <p class="eyebrow">YOUR LEARNING SPACE</p>
+            <h1>Make room for <span>progress.</span></h1>
+            <p>
+                Sign in to continue where you left off, or create an account to start learning.
+            </p>
+        </section>
+
+        <section class="account-panel" aria-labelledby="account-title">
+            <div class="account-tabs" role="group" aria-label="Account action">
+                <button class="account-tab active" id="login-tab" type="button" aria-pressed="true">
+                    Sign in
+                </button>
+                <button class="account-tab" id="register-tab" type="button" aria-pressed="false">
+                    Create account
+                </button>
+            </div>
+
+            <h2 id="account-title">Welcome back</h2>
+            <p class="account-subtitle" id="account-subtitle">
+                Enter your details to access your account.
+            </p>
+
+            <form id="auth-form">
+                <div class="form-field" id="name-field" hidden>
+                    <label for="name">Full name</label>
+                    <input
+                        id="name"
+                        name="name"
+                        type="text"
+                        autocomplete="name"
+                        minlength="2"
+                        maxlength="80"
+                    >
+                </div>
+
+                <div class="form-field">
+                    <label for="email">Email address</label>
+                    <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        autocomplete="email"
+                        required
+                    >
+                </div>
+
+                <div class="form-field">
+                    <label for="password">Password</label>
+                    <div class="password-input-wrap">
+                        <input
+                            id="password"
+                            name="password"
+                            type="password"
+                            autocomplete="current-password"
+                            maxlength="128"
+                            required
+                        >
+                        <button
+                            class="password-toggle"
+                            id="password-toggle"
+                            type="button"
+                            aria-label="Show password"
+                            aria-pressed="false"
+                            title="Show password"
+                        >
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-field" id="role-field" hidden>
+                    <label for="role">I want to join as</label>
+                    <select id="role" name="role">
+                        <option value="student">Student</option>
+                        <option value="instructor">Instructor</option>
+                    </select>
+                </div>
+
+                <button class="primary-button form-submit" id="submit-button" type="submit">
+                    Sign in <span aria-hidden="true">→</span>
+                </button>
+
+                <p class="form-message" id="form-message" role="status" aria-live="polite"></p>
+            </form>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <a class="brand" href="/" aria-label="LearnTrack home">
+            <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+                <path d="M4.5 9.5C8.7 8.2 12.4 9.1 16 12.1V26C12.4 23.1 8.7 22.2 4.5 23.5V9.5Z"
+                      fill="none" stroke="currentColor" stroke-width="2.2"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M27.5 9.5C23.3 8.2 19.6 9.1 16 12.1"
+                      fill="none" stroke="currentColor" stroke-width="2.2"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M16 12.1V26M19.5 7.5L23 4.5L26.5 7.5"
+                      fill="none" stroke="currentColor" stroke-width="2.2"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="brand-name">LearnTrack</span>
+        </a>
+        <p>Learn with purpose.</p>
+    </footer>
+
+    <script src="/js/auth.js" defer></script>
+</body>
+</html>

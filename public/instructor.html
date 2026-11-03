@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Manage your LLearnTrack courses.">
+    <title>Instructor Dashboard — LLearnTrack</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <a class="brand" href="/" aria-label="LearnTrack home">
+            <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+                <path d="M4.5 9.5C8.7 8.2 12.4 9.1 16 12.1V26C12.4 23.1 8.7 22.2 4.5 23.5V9.5Z"
+                      fill="none" stroke="currentColor" stroke-width="2.2"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M27.5 9.5C23.3 8.2 19.6 9.1 16 12.1"
+                      fill="none" stroke="currentColor" stroke-width="2.2"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M16 12.1V26M19.5 7.5L23 4.5L26.5 7.5"
+                      fill="none" stroke="currentColor" stroke-width="2.2"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="brand-name">LearnTrack</span>
+        </a>
+
+        <nav aria-label="Main navigation">
+            <a href="/">Home</a>
+            <a href="/courses.html">Courses</a>
+            <button class="nav-button" id="logout-button" type="button">
+                Sign out
+            </button>
+        </nav>
+    </header>
+
+    <main class="instructor-layout">
+        <section class="instructor-heading">
+            <p class="eyebrow">INSTRUCTOR WORKSPACE</p>
+            <h1>Welcome, <span id="instructor-name">Instructor.</span></h1>
+            <p class="hero-description">
+                Create courses and make your knowledge available to learners.
+            </p>
+        </section>
+
+        <section class="course-create-panel" id="course-create-panel" hidden aria-labelledby="create-course-title">
+            <p class="eyebrow">COURSE MANAGEMENT</p>
+            <h2 id="create-course-title">Create a new course</h2>
+            <p class="account-subtitle">
+                Give your course a clear title and a short description.
+            </p>
+
+            <form id="course-form">
+                <div class="form-field">
+                    <label for="course-title">Course title</label>
+                    <input
+                        id="course-title"
+                        name="title"
+                        type="text"
+                        minlength="3"
+                        maxlength="120"
+                        placeholder="e.g. Introduction to Python"
+                        required
+                    >
+                </div>
+
+                <div class="form-field">
+                    <label for="course-description">Description</label>
+                    <textarea
+                        id="course-description"
+                        name="description"
+                        rows="5"
+                        maxlength="1000"
+                        placeholder="What will students learn in this course?"
+                    ></textarea>
+                </div>
+
+                <button class="primary-button form-submit" id="create-course-button" type="submit">
+                    Create course <span aria-hidden="true">→</span>
+                </button>
+
+                <p class="form-message" id="course-message" role="status" aria-live="polite"></p>
+            </form>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <a class="brand" href="/" aria-label="LearnTrack home">
+            <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+                <path d="M4.5 9.5C8.7 8.2 12.4 9.1 16 12.1V26C12.4 23.1 8.7 22.2 4.5 23.5V9.5Z"
+                      fill="none" stroke="currentColor" stroke-width="2.2"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M27.5 9.5C23.3 8.2 19.6 9.1 16 12.1"
+                      fill="none" stroke="currentColor" stroke-width="2.2"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M16 12.1V26M19.5 7.5L23 4.5L26.5 7.5"
+                      fill="none" stroke="currentColor" stroke-width="2.2"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="brand-name">LearnTrack</span>
+        </a>
+        <p>Learn with purpose.</p>
+    </footer>
+
+    <script src="/js/instructor.js" defer></script>
+</body>
+</html>
