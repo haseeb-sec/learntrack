@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Explore available LearnTrack courses and discover new skills.">
-    <title>Courses — LearnTrack</title>
+    <meta name="description" content="Your LearnTrack student dashboard.">
+    <title>Student Dashboard — LearnTrack</title>
     <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/platform.css">
 </head>
-<body>
-    <header class="site-header">
+<body class="student-dashboard">
+
+    <header class="student-header">
         <a class="brand" href="/" aria-label="LearnTrack home">
             <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
                 <path d="M4.5 9.5C8.7 8.2 12.4 9.1 16 12.1V26C12.4 23.1 8.7 22.2 4.5 23.5V9.5Z"
@@ -24,60 +26,121 @@
             <span class="brand-name">LearnTrack</span>
         </a>
 
-        <nav aria-label="Main navigation">
-            <a href="/">Home</a>
-            <a href="/courses.html" aria-current="page">Courses</a>
-            <a href="/auth.html">Account</a>
-        </nav>
+        <div class="student-header-actions">
+            <span id="student-name">Loading account...</span>
+            <button type="button" id="sign-out-button" class="secondary-button">
+                Sign out
+            </button>
+        </div>
     </header>
 
-    <main>
-        <section class="courses-heading">
-            <p class="eyebrow">COURSE LIBRARY</p>
-            <h1>Explore <span>available courses.</span></h1>
-            <p class="hero-description">
-                Browse structured courses, explore lessons, and strengthen
-                your understanding through practice.
-            </p>
-        </section>
+    <main class="student-layout">
+        <aside class="student-sidebar">
+            <p class="eyebrow">LEARNING SPACE</p>
+            <nav class="student-navigation" aria-label="Student services">
+                <button type="button" class="student-nav-button active"
+                        data-view="overview">Overview</button>
+                <button type="button" class="student-nav-button"
+                        data-view="courses">Available courses</button>
+                <button type="button" class="student-nav-button"
+                        data-view="results">My results</button>
+            </nav>
+            <div class="sidebar-note">
+                <p class="eyebrow">YOUR PROGRESS</p>
+                <p>Your completed attempts and saved scores are here whenever you need them.</p>
+            </div>
+        </aside>
 
-        <section class="courses-section" aria-labelledby="courses-title">
-            <div class="courses-section-heading">
-                <div>
-                    <p class="eyebrow">YOUR LEARNING</p>
-                    <h2 id="courses-title">Available courses</h2>
+        <section class="student-workspace">
+
+            <section id="overview-view" class="student-view">
+                <p class="eyebrow">STUDENT DASHBOARD</p>
+                <h1>Welcome back, <span id="welcome-name">Student</span>.</h1>
+                <p class="hero-description">
+                    Pick up where you left off, or start a new quiz.
+                </p>
+
+                <div id="overview-progress" class="overview-progress" aria-live="polite">
+                    <p class="course-message">Loading your learning activity...</p>
                 </div>
-                <p id="course-count" class="course-count">Loading courses...</p>
-            </div>
 
-            <div
-                id="course-list"
-                class="course-grid"
-                aria-live="polite"
-                aria-busy="true"
-            >
-                <p class="course-message">Loading courses...</p>
-            </div>
+                <div id="overview-recent-activity" class="overview-recent-activity" hidden></div>
+
+                <div class="student-service-grid">
+                    <button type="button" class="student-service-card student-service-card-primary"
+                            data-view="courses">
+                        <span class="service-number">01</span>
+                        <span class="service-title">Available courses</span>
+                        <span class="service-description">
+                            Find a subject, open its quiz, and put your knowledge into practice.
+                        </span>
+                        <span class="service-action">Explore courses →</span>
+                    </button>
+
+                    <button type="button" class="student-service-card"
+                            data-view="results">
+                        <span class="service-number">02</span>
+                        <span class="service-title">My results</span>
+                        <span class="service-description">
+                            See your saved scores and how each attempt went.
+                        </span>
+                        <span class="service-action">View results →</span>
+                    </button>
+                </div>
+            </section>
+
+            <section id="courses-view" class="student-view" hidden>
+                <div class="workspace-heading">
+                    <div>
+                        <p class="eyebrow">COURSE LIBRARY</p>
+                        <h1>Available courses</h1>
+                        <p class="hero-description">
+                            Select a course to view and attempt its quiz.
+                        </p>
+                    </div>
+                    <span id="course-count" class="course-count" role="status" aria-live="polite">Loading...</span>
+                </div>
+                <div id="course-list" class="course-grid" aria-busy="true">
+                    <p class="course-message">Loading courses...</p>
+                </div>
+            </section>
+
+            <section id="quiz-view" class="student-view" hidden>
+                <div class="workspace-heading">
+                    <div>
+                        <p class="eyebrow">COURSE ASSESSMENT</p>
+                        <h1 id="quiz-title">Course quiz</h1>
+                        <p id="quiz-description" class="hero-description"></p>
+                    </div>
+                    <button type="button" id="back-to-courses"
+                            class="secondary-button">← Back to courses</button>
+                </div>
+
+                <div id="quiz-content">
+                    <p class="course-message">Choose a course to begin.</p>
+                </div>
+
+                <div id="quiz-result" class="form-message" aria-live="polite" hidden></div>
+
+                <section id="attempt-history" class="attempt-history" hidden>
+                    <h2>Previous attempts</h2>
+                    <div id="attempt-history-list"></div>
+                </section>
+            </section>
+
+            <section id="results-view" class="student-view" hidden>
+                <p class="eyebrow">YOUR PERFORMANCE</p>
+                <h1>My results</h1>
+                <p class="hero-description">
+                    Review your saved scores and revisit previous quiz attempts.
+                </p>
+                <div id="results-content">
+                    <p class="course-message">Loading your results...</p>
+                </div>
+            </section>
+
         </section>
     </main>
-
-    <footer class="site-footer">
-        <a class="brand" href="/" aria-label="LearnTrack home">
-            <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-                <path d="M4.5 9.5C8.7 8.2 12.4 9.1 16 12.1V26C12.4 23.1 8.7 22.2 4.5 23.5V9.5Z"
-                      fill="none" stroke="currentColor" stroke-width="2.2"
-                      stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M27.5 9.5C23.3 8.2 19.6 9.1 16 12.1"
-                      fill="none" stroke="currentColor" stroke-width="2.2"
-                      stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M16 12.1V26M19.5 7.5L23 4.5L26.5 7.5"
-                      fill="none" stroke="currentColor" stroke-width="2.2"
-                      stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span class="brand-name">LearnTrack</span>
-        </a>
-        <p>Learn with purpose.</p>
-    </footer>
 
     <script src="/js/courses.js" defer></script>
 </body>

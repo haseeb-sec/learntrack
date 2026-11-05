@@ -65,6 +65,15 @@ passwordToggle.addEventListener('click', () => {
 loginTab.addEventListener('click', () => setMode(false));
 registerTab.addEventListener('click', () => setMode(true));
 
+const requestedRole = new URLSearchParams(window.location.search).get('role');
+
+if (requestedRole === 'instructor') {
+    setMode(true);
+    document.getElementById('role').value = 'instructor';
+} else {
+    setMode(false);
+}
+
 authForm.addEventListener('submit', async (event) => {
     event.preventDefault();
 
@@ -82,6 +91,8 @@ authForm.addEventListener('submit', async (event) => {
     }
 
     submitButton.disabled = true;
+    loginTab.disabled = true;
+    registerTab.disabled = true;
     submitButton.textContent = isRegistering
         ? 'Creating account...'
         : 'Signing in...';
@@ -99,10 +110,15 @@ authForm.addEventListener('submit', async (event) => {
             body: JSON.stringify(payload)
         });
 
-        const result = await response.json();
+        const result = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-            throw new Error(result.error || 'Something went wrong.');
+            throw new Error(result.error || 'Something went wrong. Please try again.');
+        }
+
+        if (!isRegistering &&
+            (!result.user || !['student', 'instructor'].includes(result.user.role))) {
+            throw new Error('Your account response was incomplete. Please try signing in again.');
         }
 
         if (isRegistering) {
@@ -128,6 +144,8 @@ authForm.addEventListener('submit', async (event) => {
         formMessage.classList.add('error');
     } finally {
         submitButton.disabled = false;
+        loginTab.disabled = false;
+        registerTab.disabled = false;
 
         submitButton.innerHTML = isRegistering
             ? 'Create account <span aria-hidden="true">→</span>'

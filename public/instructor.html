@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Manage your LLearnTrack courses.">
-    <title>Instructor Dashboard — LLearnTrack</title>
+    <meta name="description" content="Manage courses and quizzes on LearnTrack.">
+    <title>Instructor Workspace — LearnTrack</title>
     <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/platform.css">
 </head>
-<body>
-    <header class="site-header">
+<body class="instructor-dashboard">
+    <header class="student-header instructor-header">
         <a class="brand" href="/" aria-label="LearnTrack home">
             <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
                 <path d="M4.5 9.5C8.7 8.2 12.4 9.1 16 12.1V26C12.4 23.1 8.7 22.2 4.5 23.5V9.5Z"
@@ -24,82 +25,189 @@
             <span class="brand-name">LearnTrack</span>
         </a>
 
-        <nav aria-label="Main navigation">
-            <a href="/">Home</a>
-            <a href="/courses.html">Courses</a>
-            <button class="nav-button" id="logout-button" type="button">
-                Sign out
-            </button>
-        </nav>
+        <div class="instructor-header-right">
+            <span class="instructor-role-label">INSTRUCTOR</span>
+            <span id="instructor-name" class="instructor-account-name">Instructor</span>
+            <button class="nav-button" id="logout-button" type="button">Sign out</button>
+        </div>
     </header>
 
-    <main class="instructor-layout">
-        <section class="instructor-heading">
-            <p class="eyebrow">INSTRUCTOR WORKSPACE</p>
-            <h1>Welcome, <span id="instructor-name">Instructor.</span></h1>
-            <p class="hero-description">
-                Create courses and make your knowledge available to learners.
-            </p>
-        </section>
+    <main class="instructor-layout instructor-workspace-layout">
+        <aside class="student-sidebar instructor-sidebar">
+            <p class="eyebrow">TEACHING SPACE</p>
+            <nav class="student-navigation instructor-navigation" aria-label="Instructor navigation">
+                <button class="student-nav-button active" type="button" data-view="overview">Overview</button>
+                <button class="student-nav-button" type="button" data-view="library">My courses</button>
+                <button class="student-nav-button" type="button" data-view="create-course">Create course</button>
+                <button class="student-nav-button" type="button" data-view="quiz-builder">Quiz builder</button>
+            </nav>
 
-        <section class="course-create-panel" id="course-create-panel" hidden aria-labelledby="create-course-title">
-            <p class="eyebrow">COURSE MANAGEMENT</p>
-            <h2 id="create-course-title">Create a new course</h2>
-            <p class="account-subtitle">
-                Give your course a clear title and a short description.
-            </p>
+            <div class="sidebar-note">
+                <p class="eyebrow">LEARNTRACK</p>
+                <p>Build useful courses and give learners a place to practise what they learn.</p>
+            </div>
+        </aside>
 
-            <form id="course-form">
-                <div class="form-field">
-                    <label for="course-title">Course title</label>
-                    <input
-                        id="course-title"
-                        name="title"
-                        type="text"
-                        minlength="3"
-                        maxlength="120"
-                        placeholder="e.g. Introduction to Python"
-                        required
-                    >
+        <section class="student-workspace instructor-workspace">
+            <section class="student-view active" id="overview-view">
+                <div class="instructor-welcome">
+                    <p class="eyebrow">INSTRUCTOR DASHBOARD</p>
+                    <h1>Welcome back.</h1>
+                    <p class="hero-description">Create a course, build its quiz, and give learners a place to practise.</p>
                 </div>
 
-                <div class="form-field">
-                    <label for="course-description">Description</label>
-                    <textarea
-                        id="course-description"
-                        name="description"
-                        rows="5"
-                        maxlength="1000"
-                        placeholder="What will students learn in this course?"
-                    ></textarea>
+                <div class="instructor-overview-grid">
+                    <button class="student-service-card student-service-card-primary instructor-action-card instructor-action-card-primary" type="button" data-view="create-course">
+                        <span class="service-index">01 / START HERE</span>
+                        <span class="service-title">Create a course</span>
+                        <span class="service-description">Give learners a clear course title and description to get started.</span>
+                        <span class="service-action">Start creating →</span>
+                    </button>
+
+                    <button class="student-service-card instructor-action-card" type="button" data-view="library">
+                        <span class="service-index">02 / YOUR COURSES</span>
+                        <span class="service-title">My courses</span>
+                        <span class="service-description">Return to your courses and continue building their quizzes.</span>
+                        <span class="service-action">Open course library →</span>
+                    </button>
+
+                    <button class="student-service-card instructor-action-card" type="button" data-view="quiz-builder">
+                        <span class="service-index">03 / NEXT STEP</span>
+                        <span class="service-title">Quiz builder</span>
+                        <span class="service-description">Add multiple-choice questions to your courses.</span>
+                        <span class="service-action">Build a quiz →</span>
+                    </button>
                 </div>
 
-                <button class="primary-button form-submit" id="create-course-button" type="submit">
-                    Create course <span aria-hidden="true">→</span>
-                </button>
+                <div class="instructor-overview-note">
+                    <p class="eyebrow">THREE STEPS TO TEACH</p>
+                    <ol class="instructor-workflow-list">
+                        <li><strong>Create a course</strong><span>Give your subject a clear title and description.</span></li>
+                        <li><strong>Add quiz questions</strong><span>Build a multiple-choice quiz for the course.</span></li>
+                        <li><strong>Let learners practise</strong><span>Students can attempt the quiz and review their saved results.</span></li>
+                    </ol>
+                </div>
+            </section>
 
-                <p class="form-message" id="course-message" role="status" aria-live="polite"></p>
-            </form>
+            <section class="student-view" id="library-view" hidden>
+                <div class="workspace-heading">
+                    <div>
+                        <p class="eyebrow">COURSE LIBRARY</p>
+                        <h1>My courses</h1>
+                        <p class="hero-description">Pick a course and keep building its quiz.</p>
+                    </div>
+                    <button class="primary-button" type="button" data-view="create-course">Create course <span aria-hidden="true">→</span></button>
+                </div>
+
+                <div class="instructor-library-summary">
+                    <span class="eyebrow">COURSE LIBRARY</span>
+                    <span id="instructor-course-count" class="course-count">Loading courses...</span>
+                </div>
+                <div id="instructor-course-list" class="course-grid" aria-live="polite">
+                    <p class="course-message">Loading your courses...</p>
+                </div>
+            </section>
+
+            <section class="student-view" id="create-course-view" hidden>
+                <div class="workspace-heading">
+                    <div>
+                        <p class="eyebrow">COURSE SETUP</p>
+                        <h1>Create a new course</h1>
+                        <p class="hero-description">Give learners a clear starting point.</p>
+                    </div>
+                </div>
+
+                <section class="course-create-panel instructor-form-panel" id="course-create-panel" hidden aria-labelledby="create-course-title">
+                    <h2 id="create-course-title">Course details</h2>
+                    <p class="account-subtitle">Add a title and a short description of what students will learn.</p>
+
+                    <form id="course-form">
+                        <div class="form-field">
+                            <label for="course-title">Course title</label>
+                            <input id="course-title" name="title" type="text" minlength="3" maxlength="120"
+                                   placeholder="e.g. Introduction to Python" required>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="course-description">Description</label>
+                            <textarea id="course-description" name="description" rows="5" maxlength="1000"
+                                      placeholder="What will students learn in this course?"></textarea>
+                        </div>
+
+                        <button class="primary-button form-submit" id="create-course-button" type="submit">
+                            Create course <span aria-hidden="true">→</span>
+                        </button>
+                        <p class="form-message" id="course-message" role="status" aria-live="polite"></p>
+                    </form>
+                </section>
+            </section>
+
+            <section class="student-view" id="quiz-builder-view" hidden>
+                <div class="workspace-heading">
+                    <div>
+                        <p class="eyebrow">QUIZ BUILDER</p>
+                        <h1>Quiz builder</h1>
+                        <p class="hero-description">Create multiple-choice questions for one of your courses.</p>
+                    </div>
+                </div>
+
+                <section class="course-create-panel instructor-form-panel" id="quiz-create-panel" hidden aria-labelledby="create-quiz-title">
+                    <h2 id="create-quiz-title">Add a question</h2>
+                    <p class="account-subtitle">Choose a course, enter a question, and mark its correct answer.</p>
+
+                    <form id="quiz-form">
+                        <div class="form-field">
+                            <label for="quiz-course">Select course</label>
+                            <select id="quiz-course" name="courseId" required>
+                                <option value="">Choose a course</option>
+                            </select>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="quiz-question">Question</label>
+                            <textarea id="quiz-question" name="question" rows="3" minlength="5" maxlength="500"
+                                      placeholder="Enter your question" required></textarea>
+                        </div>
+
+                        <div class="instructor-choice-grid">
+                            <div class="form-field">
+                                <label for="choice-1">Answer choice 1</label>
+                                <input id="choice-1" name="choices[]" type="text" maxlength="200" required>
+                            </div>
+                            <div class="form-field">
+                                <label for="choice-2">Answer choice 2</label>
+                                <input id="choice-2" name="choices[]" type="text" maxlength="200" required>
+                            </div>
+                            <div class="form-field">
+                                <label for="choice-3">Answer choice 3 (optional)</label>
+                                <input id="choice-3" name="choices[]" type="text" maxlength="200">
+                            </div>
+                            <div class="form-field">
+                                <label for="choice-4">Answer choice 4 (optional)</label>
+                                <input id="choice-4" name="choices[]" type="text" maxlength="200">
+                            </div>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="correct-choice">Correct answer</label>
+                            <select id="correct-choice" name="correctIndex" required>
+                                <option value="">Select the correct choice</option>
+                                <option value="0">Answer choice 1</option>
+                                <option value="1">Answer choice 2</option>
+                                <option value="2">Answer choice 3</option>
+                                <option value="3">Answer choice 4</option>
+                            </select>
+                        </div>
+
+                        <button class="primary-button form-submit" id="add-question-button" type="submit">
+                            Add question <span aria-hidden="true">→</span>
+                        </button>
+                        <p class="form-message instructor-dependency-message" id="quiz-message" role="status" aria-live="polite"></p>
+                    </form>
+                </section>
+            </section>
         </section>
     </main>
-
-    <footer class="site-footer">
-        <a class="brand" href="/" aria-label="LearnTrack home">
-            <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-                <path d="M4.5 9.5C8.7 8.2 12.4 9.1 16 12.1V26C12.4 23.1 8.7 22.2 4.5 23.5V9.5Z"
-                      fill="none" stroke="currentColor" stroke-width="2.2"
-                      stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M27.5 9.5C23.3 8.2 19.6 9.1 16 12.1"
-                      fill="none" stroke="currentColor" stroke-width="2.2"
-                      stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M16 12.1V26M19.5 7.5L23 4.5L26.5 7.5"
-                      fill="none" stroke="currentColor" stroke-width="2.2"
-                      stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span class="brand-name">LearnTrack</span>
-        </a>
-        <p>Learn with purpose.</p>
-    </footer>
 
     <script src="/js/instructor.js" defer></script>
 </body>
