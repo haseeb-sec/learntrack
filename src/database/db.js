@@ -2,7 +2,7 @@ const Database = require('better-sqlite3');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const databasePath = path.join(__dirname, '../../database/learntrack.db');
+const databasePath = process.env.DATABASE_PATH || path.join(__dirname, '../../database/learntrack.db');
 const schemaPath = path.join(__dirname, 'schema.sql');
 
 const db = new Database(databasePath);

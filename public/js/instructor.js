@@ -12,6 +12,13 @@ const quizMessage = document.getElementById('quiz-message');
 const quizCourse = document.getElementById('quiz-course');
 const addQuestionButton = document.getElementById('add-question-button');
 
+const lessonForm = document.getElementById('lesson-form');
+const lessonCourse = document.getElementById('lesson-course');
+const lessonMessage = document.getElementById('lesson-message');
+const addLessonButton = document.getElementById('add-lesson-button');
+const lessonList = document.getElementById('lesson-list');
+const lessonListCourseLabel = document.getElementById('lesson-list-course-label');
+
 const courseList = document.getElementById('instructor-course-list');
 const courseCount = document.getElementById('instructor-course-count');
 
@@ -120,9 +127,11 @@ async function loadInstructorCourses() {
         const selectedCourseId = requestedQuizCourseId || quizCourse.value;
 
         quizCourse.replaceChildren(new Option('Choose a course', ''));
+        lessonCourse.replaceChildren(new Option('Choose a course', ''));
 
         instructorCourses.forEach((course) => {
             quizCourse.add(new Option(course.title, course.id));
+            lessonCourse.add(new Option(course.title, course.id));
         });
 
         if (instructorCourses.some((course) => String(course.id) === selectedCourseId)) {
@@ -131,6 +140,21 @@ async function loadInstructorCourses() {
         requestedQuizCourseId = '';
 
         renderInstructorCourses();
+
+        const selectedLessonCourseId = lessonCourse.value;
+        if (selectedLessonCourseId && instructorCourses.some(
+            course => String(course.id) === selectedLessonCourseId
+        )) {
+            lessonCourse.value = selectedLessonCourseId;
+            await loadLessons(selectedLessonCourseId);
+        } else if (instructorCourses.length > 0) {
+            lessonCourse.value = String(instructorCourses[0].id);
+            await loadLessons(lessonCourse.value);
+        } else {
+            lessonList.replaceChildren();
+            lessonListCourseLabel.textContent = 'No courses yet';
+            showLessonMessage('Create a course before adding lessons.');
+        }
 
         if (instructorCourses.length === 0) {
             showQuizMessage('Start by creating a course. You can add its quiz questions here afterwards.');
@@ -148,6 +172,95 @@ async function loadInstructorCourses() {
         showQuizMessage(error.message, 'error');
     }
 }
+
+
+function showLessonMessage(message, type = '') {
+    lessonMessage.textContent = message;
+    lessonMessage.className = `form-message ${type}`;
+}
+
+async function loadLessons(courseId) {
+    lessonList.replaceChildren();
+    const loading = document.createElement('p');
+    loading.className = 'course-message';
+    loading.textContent = 'Loading lessons...';
+    lessonList.append(loading);
+
+    const course = instructorCourses.find(item => String(item.id) === String(courseId));
+    lessonListCourseLabel.textContent = course ? course.title : 'Course lessons';
+
+    try {
+        const response = await fetch(`/api/courses/${courseId}/lessons/manage`);
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Unable to load lessons.');
+
+        lessonList.replaceChildren();
+        if (!result.lessons.length) {
+            const empty = document.createElement('p');
+            empty.className = 'course-message';
+            empty.textContent = 'No lessons have been added to this course yet.';
+            lessonList.append(empty);
+            return;
+        }
+
+        result.lessons.forEach((lesson, index) => {
+            const card = document.createElement('article');
+            card.className = 'course-card';
+            const label = document.createElement('span');
+            label.className = 'course-label';
+            label.textContent = `LESSON ${String(index + 1).padStart(2, '0')}`;
+            const title = document.createElement('h3');
+            title.textContent = lesson.title;
+            const content = document.createElement('p');
+            content.textContent = lesson.content;
+            card.append(label, title, content);
+            lessonList.append(card);
+        });
+    } catch (error) {
+        showLessonMessage(error.message, 'error');
+        lessonList.replaceChildren();
+    }
+}
+
+lessonCourse.addEventListener('change', () => {
+    if (lessonCourse.value) loadLessons(lessonCourse.value);
+});
+
+lessonForm.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (!lessonCourse.value) {
+        showLessonMessage('Please select a course.', 'error');
+        return;
+    }
+
+    addLessonButton.disabled = true;
+    addLessonButton.textContent = 'Adding lesson...';
+    showLessonMessage();
+
+    try {
+        const response = await fetch(`/api/courses/${lessonCourse.value}/lessons`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: document.getElementById('lesson-title').value.trim(),
+                content: document.getElementById('lesson-content').value.trim()
+            })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Unable to add lesson.');
+
+        const selectedCourseId = lessonCourse.value;
+        lessonForm.reset();
+        lessonCourse.value = selectedCourseId;
+        showLessonMessage('Lesson added successfully.', 'success');
+        await loadLessons(selectedCourseId);
+    } catch (error) {
+        showLessonMessage(error.message, 'error');
+    } finally {
+        addLessonButton.disabled = false;
+        addLessonButton.innerHTML = 'Add lesson <span aria-hidden="true">→</span>';
+    }
+});
 
 async function checkInstructorAccess() {
     try {
@@ -184,6 +297,7 @@ async function checkInstructorAccess() {
 
         coursePanel.hidden = false;
         quizPanel.hidden = false;
+        document.getElementById('lesson-create-panel').hidden = false;
 
         return true;
     } catch (error) {

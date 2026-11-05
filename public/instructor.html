@@ -40,6 +40,7 @@
                 <button class="student-nav-button" type="button" data-view="library">My courses</button>
                 <button class="student-nav-button" type="button" data-view="create-course">Create course</button>
                 <button class="student-nav-button" type="button" data-view="quiz-builder">Quiz builder</button>
+                <button class="student-nav-button" type="button" data-view="lesson-builder">Lesson builder</button>
             </nav>
 
             <div class="sidebar-note">
@@ -140,6 +141,52 @@
                         <p class="form-message" id="course-message" role="status" aria-live="polite"></p>
                     </form>
                 </section>
+            </section>
+
+            <section class="student-view" id="lesson-builder-view" hidden>
+                <div class="workspace-heading">
+                    <div>
+                        <p class="eyebrow">LESSON BUILDER</p>
+                        <h1>Course lessons</h1>
+                        <p class="hero-description">Add written learning material to your courses.</p>
+                    </div>
+                </div>
+
+                <section class="course-create-panel instructor-form-panel" id="lesson-create-panel" hidden aria-labelledby="create-lesson-title">
+                    <h2 id="create-lesson-title">Add a text lesson</h2>
+                    <p class="account-subtitle">Choose a course, give the lesson a title, and add its learning content.</p>
+
+                    <form id="lesson-form">
+                        <div class="form-field">
+                            <label for="lesson-course">Select course</label>
+                            <select id="lesson-course" name="courseId" required>
+                                <option value="">Choose a course</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label for="lesson-title">Lesson title</label>
+                            <input id="lesson-title" name="title" type="text" minlength="3" maxlength="120"
+                                   placeholder="e.g. Introduction to variables" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="lesson-content">Lesson content</label>
+                            <textarea id="lesson-content" name="content" rows="8" maxlength="20000"
+                                      placeholder="Write the lesson material for your students..." required></textarea>
+                        </div>
+                        <button class="primary-button form-submit" id="add-lesson-button" type="submit">
+                            Add lesson <span aria-hidden="true">→</span>
+                        </button>
+                        <p class="form-message" id="lesson-message" role="status" aria-live="polite"></p>
+                    </form>
+                </section>
+
+                <section class="instructor-library-summary" aria-label="Existing lessons">
+                    <span class="eyebrow">COURSE CONTENT</span>
+                    <span id="lesson-list-course-label" class="course-count">Select a course</span>
+                </section>
+                <div id="lesson-list" class="course-grid" aria-live="polite">
+                    <p class="course-message">Choose a course to view its lessons.</p>
+                </div>
             </section>
 
             <section class="student-view" id="quiz-builder-view" hidden>

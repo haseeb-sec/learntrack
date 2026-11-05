@@ -509,4 +509,109 @@ router.get('/:courseId/attempts/mine', requireRole('student'), (req, res) => {
     }
 });
 
+
+// Students can read published text lessons for an available course.
+router.get('/:courseId/lessons', requireRole('student'), (req, res) => {
+    try {
+        const courseId = Number(req.params.courseId);
+        if (!Number.isSafeInteger(courseId) || courseId < 1) {
+            return res.status(400).json({ error: 'Invalid course ID.' });
+        }
+
+        const course = db.prepare('SELECT id FROM courses WHERE id = ?').get(courseId);
+        if (!course) {
+            return res.status(404).json({ error: 'Course not found.' });
+        }
+
+        const lessons = db.prepare(`
+            SELECT id, title, content, position
+            FROM lessons
+            WHERE course_id = ?
+            ORDER BY position ASC, id ASC
+        `).all(courseId);
+
+        res.json({ lessons });
+    } catch (error) {
+        console.error('Failed to retrieve lessons:', error.message);
+        res.status(500).json({ error: 'Unable to retrieve course lessons.' });
+    }
+});
+
+// Instructors can retrieve lessons only for courses they own.
+router.get('/:courseId/lessons/manage', requireRole('instructor'), (req, res) => {
+    try {
+        const courseId = Number(req.params.courseId);
+        if (!Number.isSafeInteger(courseId) || courseId < 1) {
+            return res.status(400).json({ error: 'Invalid course ID.' });
+        }
+
+        const course = db.prepare(
+            'SELECT id FROM courses WHERE id = ? AND instructor_id = ?'
+        ).get(courseId, req.user.id);
+
+        if (!course) {
+            return res.status(404).json({ error: 'Course not found.' });
+        }
+
+        const lessons = db.prepare(`
+            SELECT id, title, content, position
+            FROM lessons
+            WHERE course_id = ?
+            ORDER BY position ASC, id ASC
+        `).all(courseId);
+
+        res.json({ lessons });
+    } catch (error) {
+        console.error('Failed to retrieve instructor lessons:', error.message);
+        res.status(500).json({ error: 'Unable to retrieve course lessons.' });
+    }
+});
+
+// Instructors can add text lessons only to their own courses.
+router.post('/:courseId/lessons', requireRole('instructor'), (req, res) => {
+    try {
+        const courseId = Number(req.params.courseId);
+        const title = typeof req.body.title === 'string' ? req.body.title.trim() : '';
+        const content = typeof req.body.content === 'string' ? req.body.content.trim() : '';
+
+        if (!Number.isSafeInteger(courseId) || courseId < 1) {
+            return res.status(400).json({ error: 'Invalid course ID.' });
+        }
+        if (title.length < 3 || title.length > 120) {
+            return res.status(400).json({ error: 'Lesson title must be between 3 and 120 characters.' });
+        }
+        if (!content || content.length > 20000) {
+            return res.status(400).json({ error: 'Lesson content is required and must not exceed 20,000 characters.' });
+        }
+
+        const course = db.prepare(
+            'SELECT id FROM courses WHERE id = ? AND instructor_id = ?'
+        ).get(courseId, req.user.id);
+
+        if (!course) {
+            return res.status(404).json({ error: 'Course not found.' });
+        }
+
+        const nextPosition = db.prepare(
+            'SELECT COALESCE(MAX(position), 0) + 1 AS position FROM lessons WHERE course_id = ?'
+        ).get(courseId).position;
+
+        const result = db.prepare(`
+            INSERT INTO lessons (course_id, title, content, position)
+            VALUES (?, ?, ?, ?)
+        `).run(courseId, title, content, nextPosition);
+
+        const lesson = db.prepare(`
+            SELECT id, title, content, position
+            FROM lessons
+            WHERE id = ?
+        `).get(result.lastInsertRowid);
+
+        res.status(201).json({ message: 'Lesson added successfully.', lesson });
+    } catch (error) {
+        console.error('Failed to create lesson:', error.message);
+        res.status(500).json({ error: 'Unable to add lesson.' });
+    }
+});
+
 module.exports = router;

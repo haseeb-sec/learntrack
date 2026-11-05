@@ -52,7 +52,11 @@ function showView(viewName) {
         view.hidden = view.id !== `${viewName}-view`;
     });
 
-    document.querySelectorAll('[data-view]').forEach(button => {
+    document.getElementById('back-from-lessons').addEventListener('click', () => {
+    showView('courses');
+});
+
+document.querySelectorAll('[data-view]').forEach(button => {
         const active = button.dataset.view === viewName;
         button.classList.toggle('active', active);
 
@@ -253,7 +257,13 @@ async function loadCourses() {
                 button.addEventListener('click', () => openQuiz(course));
             }
 
-            card.append(label, title, description, metadata, instructor, button);
+            const lessonsButton = document.createElement('button');
+            lessonsButton.type = 'button';
+            lessonsButton.className = 'secondary-button';
+            lessonsButton.textContent = 'Read lessons';
+            lessonsButton.addEventListener('click', () => openLessons(course));
+
+            card.append(label, title, description, metadata, instructor, button, lessonsButton);
             courseList.appendChild(card);
         });
     } catch (error) {
@@ -264,6 +274,56 @@ async function loadCourses() {
         courseCount.textContent = 'Courses unavailable';
         courseList.setAttribute('aria-busy', 'false');
         showMessage(courseList, error.message);
+    }
+}
+
+async function openLessons(course) {
+    const requestId = ++quizRequestId;
+    activeCourseId = course.id;
+
+    showView('lessons');
+
+    document.getElementById('lesson-title').textContent = course.title;
+    document.getElementById('lesson-description').textContent =
+        'Read the lessons prepared by your instructor.';
+    const lessonContent = document.getElementById('lesson-content');
+    showMessage(lessonContent, 'Loading lessons...');
+
+    try {
+        const response = await fetch(`/api/courses/${course.id}/lessons`);
+        const data = await readResponse(response);
+
+        if (requestId !== quizRequestId || activeCourseId !== course.id) return;
+
+        lessonContent.replaceChildren();
+
+        if (!data.lessons || data.lessons.length === 0) {
+            showMessage(lessonContent, 'No lessons have been added to this course yet.');
+            return;
+        }
+
+        data.lessons.forEach((lesson, index) => {
+            const article = document.createElement('article');
+            article.className = 'course-card';
+
+            const label = document.createElement('span');
+            label.className = 'course-label';
+            label.textContent = `LESSON ${String(index + 1).padStart(2, '0')}`;
+
+            const heading = document.createElement('h2');
+            heading.textContent = lesson.title;
+
+            const content = document.createElement('p');
+            content.textContent = lesson.content;
+            content.style.whiteSpace = 'pre-wrap';
+
+            article.append(label, heading, content);
+            lessonContent.append(article);
+        });
+    } catch (error) {
+        if (requestId === quizRequestId && activeCourseId === course.id) {
+            showMessage(lessonContent, error.message);
+        }
     }
 }
 
