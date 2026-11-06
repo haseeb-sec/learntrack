@@ -667,4 +667,116 @@ router.post('/:courseId/lessons', requireRole('instructor'), (req, res) => {
     }
 });
 
+
+// Instructor-only content management endpoints. All writes are restricted to course owners.
+function getOwnedCourse(courseId, instructorId) {
+    return db.prepare('SELECT id FROM courses WHERE id = ? AND instructor_id = ?').get(courseId, instructorId);
+}
+
+router.put('/:courseId', requireRole('instructor'), (req, res) => {
+    const courseId = Number(req.params.courseId);
+    const title = typeof req.body.title === 'string' ? req.body.title.trim() : '';
+    const description = typeof req.body.description === 'string' ? req.body.description.trim() : '';
+    if (!Number.isSafeInteger(courseId) || courseId < 1) return res.status(400).json({ error: 'Invalid course ID.' });
+    if (title.length < 3 || title.length > 120 || description.length > 1000) return res.status(400).json({ error: 'Course title must be 3–120 characters and description no more than 1,000 characters.' });
+    if (!getOwnedCourse(courseId, req.user.id)) return res.status(404).json({ error: 'Course not found or you do not own this course.' });
+    db.prepare('UPDATE courses SET title = ?, description = ? WHERE id = ?').run(title, description, courseId);
+    return res.json({ message: 'Course updated successfully.', course: db.prepare('SELECT id, title, description FROM courses WHERE id = ?').get(courseId) });
+});
+
+router.delete('/:courseId', requireRole('instructor'), (req, res) => {
+    const courseId = Number(req.params.courseId);
+    if (!Number.isSafeInteger(courseId) || courseId < 1) return res.status(400).json({ error: 'Invalid course ID.' });
+    if (!getOwnedCourse(courseId, req.user.id)) return res.status(404).json({ error: 'Course not found or you do not own this course.' });
+    if (db.prepare('SELECT COUNT(*) AS count FROM attempts WHERE course_id = ?').get(courseId).count > 0) return res.status(409).json({ error: 'This course has saved quiz attempts. Remove the relevant attempt history first, or keep the course to preserve student records.' });
+    db.prepare('DELETE FROM courses WHERE id = ? AND instructor_id = ?').run(courseId, req.user.id);
+    return res.json({ message: 'Course and its lessons, quiz questions, and enrollments were deleted.' });
+});
+
+router.get('/:courseId/questions/manage', requireRole('instructor'), (req, res) => {
+    const courseId = Number(req.params.courseId);
+    if (!Number.isSafeInteger(courseId) || courseId < 1) return res.status(400).json({ error: 'Invalid course ID.' });
+    if (!getOwnedCourse(courseId, req.user.id)) return res.status(404).json({ error: 'Course not found or you do not own this course.' });
+    const questions = db.prepare('SELECT id, question_text, position FROM questions WHERE course_id = ? ORDER BY position, id').all(courseId);
+    const getChoices = db.prepare('SELECT id, choice_text, is_correct FROM question_choices WHERE question_id = ? ORDER BY id');
+    return res.json({ questions: questions.map(question => ({ ...question, choices: getChoices.all(question.id) })) });
+});
+
+function validateQuestionPayload(body) {
+    const question = typeof body.question === 'string' ? body.question.trim() : '';
+    const choices = body.choices;
+    const correctIndex = body.correctIndex;
+    if (question.length < 5 || question.length > 500) return { error: 'Question must be between 5 and 500 characters.' };
+    if (!Array.isArray(choices) || choices.length < 2 || choices.length > 6 || choices.some(choice => typeof choice !== 'string' || !choice.trim() || choice.trim().length > 200)) return { error: 'Provide between 2 and 6 valid answer choices.' };
+    const cleanChoices = choices.map(choice => choice.trim());
+    if (new Set(cleanChoices.map(choice => choice.toLowerCase())).size !== cleanChoices.length) return { error: 'Answer choices must be unique.' };
+    if (!Number.isInteger(correctIndex) || correctIndex < 0 || correctIndex >= cleanChoices.length) return { error: 'Select exactly one correct answer.' };
+    return { question, choices: cleanChoices, correctIndex };
+}
+
+router.put('/:courseId/questions/:questionId', requireRole('instructor'), (req, res) => {
+    const courseId = Number(req.params.courseId), questionId = Number(req.params.questionId);
+    if (!Number.isSafeInteger(courseId) || courseId < 1 || !Number.isSafeInteger(questionId) || questionId < 1) return res.status(400).json({ error: 'Invalid course or question ID.' });
+    if (!getOwnedCourse(courseId, req.user.id)) return res.status(404).json({ error: 'Course not found or you do not own this course.' });
+    if (!db.prepare('SELECT id FROM questions WHERE id = ? AND course_id = ?').get(questionId, courseId)) return res.status(404).json({ error: 'Question not found.' });
+    if (db.prepare('SELECT COUNT(*) AS count FROM attempt_answers WHERE question_id = ?').get(questionId).count > 0) return res.status(409).json({ error: 'This question is already part of a submitted attempt. Delete the relevant attempt history before editing it.' });
+    const valid = validateQuestionPayload(req.body);
+    if (valid.error) return res.status(400).json({ error: valid.error });
+    db.transaction(() => {
+        db.prepare('UPDATE questions SET question_text = ? WHERE id = ?').run(valid.question, questionId);
+        db.prepare('DELETE FROM question_choices WHERE question_id = ?').run(questionId);
+        const insert = db.prepare('INSERT INTO question_choices (question_id, choice_text, is_correct) VALUES (?, ?, ?)');
+        valid.choices.forEach((choice, index) => insert.run(questionId, choice, index === valid.correctIndex ? 1 : 0));
+    })();
+    return res.json({ message: 'Question updated successfully.' });
+});
+
+router.delete('/:courseId/questions/:questionId', requireRole('instructor'), (req, res) => {
+    const courseId = Number(req.params.courseId), questionId = Number(req.params.questionId);
+    if (!Number.isSafeInteger(courseId) || courseId < 1 || !Number.isSafeInteger(questionId) || questionId < 1) return res.status(400).json({ error: 'Invalid course or question ID.' });
+    if (!getOwnedCourse(courseId, req.user.id)) return res.status(404).json({ error: 'Course not found or you do not own this course.' });
+    if (!db.prepare('SELECT id FROM questions WHERE id = ? AND course_id = ?').get(questionId, courseId)) return res.status(404).json({ error: 'Question not found.' });
+    if (db.prepare('SELECT COUNT(*) AS count FROM attempt_answers WHERE question_id = ?').get(questionId).count > 0) return res.status(409).json({ error: 'This question is referenced by submitted attempts. Remove those attempts first to preserve consistent results.' });
+    db.prepare('DELETE FROM questions WHERE id = ? AND course_id = ?').run(questionId, courseId);
+    return res.json({ message: 'Question deleted successfully.' });
+});
+
+router.delete('/:courseId/questions', requireRole('instructor'), (req, res) => {
+    const courseId = Number(req.params.courseId);
+    if (!Number.isSafeInteger(courseId) || courseId < 1) return res.status(400).json({ error: 'Invalid course ID.' });
+    if (!getOwnedCourse(courseId, req.user.id)) return res.status(404).json({ error: 'Course not found or you do not own this course.' });
+    if (db.prepare('SELECT COUNT(*) AS count FROM attempts WHERE course_id = ?').get(courseId).count > 0) return res.status(409).json({ error: 'This quiz has submitted attempts. Remove the relevant attempt records first; other students’ results will not be deleted automatically.' });
+    db.prepare('DELETE FROM questions WHERE course_id = ?').run(courseId);
+    return res.json({ message: 'Quiz questions deleted successfully.' });
+});
+
+router.put('/:courseId/lessons/:lessonId', requireRole('instructor'), (req, res) => {
+    const courseId = Number(req.params.courseId), lessonId = Number(req.params.lessonId);
+    const title = typeof req.body.title === 'string' ? req.body.title.trim() : '';
+    const content = typeof req.body.content === 'string' ? req.body.content.trim() : '';
+    if (!Number.isSafeInteger(courseId) || courseId < 1 || !Number.isSafeInteger(lessonId) || lessonId < 1) return res.status(400).json({ error: 'Invalid course or lesson ID.' });
+    if (title.length < 3 || title.length > 120 || !content || content.length > 20000) return res.status(400).json({ error: 'Lesson title must be 3–120 characters and content is required (maximum 20,000 characters).' });
+    if (!getOwnedCourse(courseId, req.user.id)) return res.status(404).json({ error: 'Course not found or you do not own this course.' });
+    const result = db.prepare('UPDATE lessons SET title = ?, content = ? WHERE id = ? AND course_id = ?').run(title, content, lessonId, courseId);
+    if (!result.changes) return res.status(404).json({ error: 'Lesson not found.' });
+    return res.json({ message: 'Lesson updated successfully.' });
+});
+
+router.delete('/:courseId/lessons/:lessonId', requireRole('instructor'), (req, res) => {
+    const courseId = Number(req.params.courseId), lessonId = Number(req.params.lessonId);
+    if (!Number.isSafeInteger(courseId) || courseId < 1 || !Number.isSafeInteger(lessonId) || lessonId < 1) return res.status(400).json({ error: 'Invalid course or lesson ID.' });
+    if (!getOwnedCourse(courseId, req.user.id)) return res.status(404).json({ error: 'Course not found or you do not own this course.' });
+    const result = db.prepare('DELETE FROM lessons WHERE id = ? AND course_id = ?').run(lessonId, courseId);
+    if (!result.changes) return res.status(404).json({ error: 'Lesson not found.' });
+    return res.json({ message: 'Lesson deleted successfully.' });
+});
+
+router.delete('/:courseId/attempts/:attemptId', requireRole('student'), (req, res) => {
+    const courseId = Number(req.params.courseId), attemptId = Number(req.params.attemptId);
+    if (!Number.isSafeInteger(courseId) || courseId < 1 || !Number.isSafeInteger(attemptId) || attemptId < 1) return res.status(400).json({ error: 'Invalid course or attempt ID.' });
+    const result = db.prepare('DELETE FROM attempts WHERE id = ? AND course_id = ? AND student_id = ?').run(attemptId, courseId, req.user.id);
+    if (!result.changes) return res.status(404).json({ error: 'Attempt not found.' });
+    return res.json({ message: 'Your quiz attempt was deleted.' });
+});
+
 module.exports = router;
