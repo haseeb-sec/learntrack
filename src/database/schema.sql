@@ -58,6 +58,20 @@ CREATE TABLE IF NOT EXISTS attempts (
     FOREIGN KEY (course_id) REFERENCES courses(id)
 );
 
+CREATE TABLE IF NOT EXISTS enrollments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER NOT NULL,
+    course_id INTEGER NOT NULL,
+    enrolled_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+    UNIQUE (student_id, course_id)
+);
+
+-- Preserve access for students who already have saved quiz attempts.
+INSERT OR IGNORE INTO enrollments (student_id, course_id)
+SELECT DISTINCT student_id, course_id FROM attempts;
+
 CREATE TABLE IF NOT EXISTS attempt_answers (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     attempt_id INTEGER NOT NULL,
