@@ -1,13 +1,15 @@
 # LearnTrack — Entity Relationship Diagram
 
-This diagram represents the database structure defined in `src/database/schema.sql`.
+This diagram reflects the database schema in `src/database/schema.sql`.
 
-## Entity Relationship Diagram
+## Entity relationship diagram
 
 ```mermaid
 erDiagram
     USERS ||--o{ COURSES : creates
+    USERS ||--o{ ENROLLMENTS : joins
     USERS ||--o{ ATTEMPTS : submits
+    COURSES ||--o{ ENROLLMENTS : has
     COURSES ||--o{ LESSONS : contains
     COURSES ||--o{ QUESTIONS : contains
     COURSES ||--o{ ATTEMPTS : receives
@@ -31,6 +33,13 @@ erDiagram
         string title
         string description
         datetime created_at
+    }
+
+    ENROLLMENTS {
+        int id PK
+        int student_id FK
+        int course_id FK
+        datetime enrolled_at
     }
 
     LESSONS {
@@ -71,28 +80,31 @@ erDiagram
         int selected_choice_id FK
         boolean is_correct
     }
-    }
+```
 
-
-## Relationship Explanation
+## Relationship explanation
 
 - One instructor can create multiple courses.
-- One student can submit multiple quiz attempts.
-- One course can contain multiple lessons and questions.
-- One course can receive multiple student attempts.
+- Students can enroll in multiple courses, and each course can have multiple enrolled students.
+- One course can contain multiple lessons and quiz questions.
 - One question can have multiple answer choices.
-- Each attempt records the student's selected answers.
-- Each recorded answer references its question and selected choice.
+- One student can submit multiple attempts.
+- Each attempt belongs to one student and one course.
+- Each attempt can contain multiple submitted answers.
+- Each answer references the question and selected choice.
 
-## Database Constraints
+## Database constraints and application rules
 
-- User email addresses must be unique.
+- User email addresses are unique.
 - User roles are restricted to `instructor` and `student`.
+- A student can enroll only once in a given course.
 - Each question can have only one correct choice, enforced by a partial unique index.
-- A question cannot be answered more than once in the same attempt.
-- Deleting a course cascades to its lessons and questions.
-- Deleting a question cascades to its answer choices.
+- A question can be answered only once per attempt.
+- Course deletion cascades to its lessons, questions, and enrollments.
+- Question deletion cascades to its answer choices.
+- Attempt-answer rows cascade when their parent attempt is deleted.
+- The application prevents changes to questions referenced by saved answers and prevents deleting a quiz or course while attempts exist.
 
-## Implementation Note
+## Implementation note
 
-The application validates course ownership, student permissions, quiz submissions, and answer correctness on the server. The database stores the resulting scores and individual answers.
+The database enforces core relationships and uniqueness constraints. The Express routes enforce authentication, role permissions, course ownership, enrollment requirements, quiz validation, and server-side score calculation.
