@@ -27,11 +27,6 @@ router.get('/', (req, res) => {
                 courses.id,
                 courses.title,
                 courses.description,
-                EXISTS (
-                    SELECT 1 FROM enrollments
-                    WHERE enrollments.course_id = courses.id
-                      AND enrollments.student_id = ?
-                ) AS is_enrolled,
                 courses.created_at,
                 users.name AS instructor
             FROM courses
@@ -112,6 +107,11 @@ router.get('/student/summary', requireRole('student'), (req, res) => {
                 courses.id,
                 courses.title,
                 courses.description,
+                EXISTS (
+                    SELECT 1 FROM enrollments
+                    WHERE enrollments.course_id = courses.id
+                      AND enrollments.student_id = ?
+                ) AS is_enrolled,
                 courses.created_at,
                 users.name AS instructor,
                 (
@@ -161,6 +161,7 @@ router.get('/student/summary', requireRole('student'), (req, res) => {
             INNER JOIN users ON users.id = courses.instructor_id
             ORDER BY courses.created_at DESC
         `).all(
+            req.user.id,
             req.user.id,
             req.user.id,
             req.user.id,
