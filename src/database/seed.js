@@ -46,10 +46,14 @@ async function seed() {
         password: process.env.SEED_STUDENT_PASSWORD
     });
 
+    // Reuse an existing demo course with the same title before creating
+    // another one under a different demo/instructor account.
     let course = db.prepare(`
         SELECT id FROM courses
-        WHERE instructor_id = ? AND title = ?
-    `).get(instructor.id, 'Introduction to Web Development');
+        WHERE title = ? COLLATE NOCASE
+        ORDER BY CASE WHEN instructor_id = ? THEN 0 ELSE 1 END, id
+        LIMIT 1
+    `).get('Introduction to Web Development', instructor.id);
 
     if (!course) {
         const result = db.prepare(`
