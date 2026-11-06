@@ -213,6 +213,7 @@ async function loadLessons(courseId) {
             title.textContent = lesson.title;
             const content = document.createElement('p');
             content.textContent = lesson.content;
+            content.className = 'lesson-body';
             card.append(label, title, content);
             lessonList.append(card);
         });
