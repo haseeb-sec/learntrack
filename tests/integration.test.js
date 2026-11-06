@@ -164,6 +164,21 @@ test('LearnTrack authentication, lessons, quizzes and results', async () => {
             ['Introduction', 'Variables']
         );
 
+        const blockedLessons = await request(
+            `/api/courses/${courseId}/lessons`, {}, studentCookie
+        );
+        assert.equal(blockedLessons.response.status, 403);
+
+        const enrollment = await request(`/api/courses/${courseId}/enroll`, {
+            method: 'POST'
+        }, studentCookie);
+        assert.equal(enrollment.response.status, 201);
+
+        const duplicateEnrollment = await request(`/api/courses/${courseId}/enroll`, {
+            method: 'POST'
+        }, studentCookie);
+        assert.equal(duplicateEnrollment.response.status, 200);
+
         const studentLessons = await request(
             `/api/courses/${courseId}/lessons`, {}, studentCookie
         );
