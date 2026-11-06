@@ -5,10 +5,15 @@ const db = require('./db');
 
 async function getOrCreateUser({ name, email, role, password }) {
     let user = db.prepare(
-        'SELECT id FROM users WHERE email = ?'
+        'SELECT id, role FROM users WHERE email = ?'
     ).get(email);
 
-    if (user) return user;
+    if (user) {
+        if (user.role !== role) {
+            throw new Error(`Account ${email} exists with the wrong role.`);
+        }
+        return user;
+    }
 
     if (!password || password.length < 8) {
         throw new Error(
@@ -29,14 +34,14 @@ async function getOrCreateUser({ name, email, role, password }) {
 async function seed() {
     const instructor = await getOrCreateUser({
         name: 'Demo Instructor',
-        email: 'instructor@learntrack.local',
+        email: process.env.SEED_INSTRUCTOR_EMAIL || 'instructor@learntrack.local',
         role: 'instructor',
         password: process.env.SEED_INSTRUCTOR_PASSWORD
     });
 
     await getOrCreateUser({
         name: 'Demo Student',
-        email: 'student@learntrack.local',
+        email: process.env.SEED_STUDENT_EMAIL || 'student@learntrack.local',
         role: 'student',
         password: process.env.SEED_STUDENT_PASSWORD
     });
@@ -145,8 +150,8 @@ async function seed() {
     addDemoContent();
 
     console.log('Demo data is ready.');
-    console.log('Instructor: instructor@learntrack.local');
-    console.log('Student: student@learntrack.local');
+    console.log(`Instructor: ${process.env.SEED_INSTRUCTOR_EMAIL || 'instructor@learntrack.local'}`);
+    console.log(`Student: ${process.env.SEED_STUDENT_EMAIL || 'student@learntrack.local'}`);
     console.log('Course: Introduction to Web Development');
     console.log('Demo lessons and quiz questions are available.');
 }
