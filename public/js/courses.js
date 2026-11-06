@@ -261,7 +261,7 @@ async function loadCourses() {
 
             card.append(label, title, description, instructor, metadata, actions);
             courseList.appendChild(card);
-        });;
+        });
     } catch (error) {
         if (requestId !== courseRequestId) {
             return;
@@ -328,7 +328,7 @@ async function openLessons(course) {
 
             const content = document.createElement('p');
             content.textContent = lesson.content;
-            content.style.whiteSpace = 'pre-wrap';
+            content.className = 'lesson-body';
 
             article.append(label, heading, content);
             lessonContent.append(article);
