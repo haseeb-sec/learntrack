@@ -1943,8 +1943,8 @@
 
 
 /* Course enrollment, course details and readable lesson material */
-.course-description,
-.lesson-body {
+.course-card > .course-description,
+.course-card > .lesson-body {
     color: #555e57;
     font-size: 14px;
     line-height: 1.95;
