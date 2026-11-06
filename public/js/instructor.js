@@ -332,6 +332,20 @@ async function loadQuizQuestions(courseId) {
     const heading = document.createElement('h2');
     heading.textContent = 'Existing quiz questions';
     quizQuestionList.append(heading);
+    const deleteQuiz = document.createElement('button');
+    deleteQuiz.type = 'button';
+    deleteQuiz.className = 'secondary-button';
+    deleteQuiz.textContent = 'Delete entire quiz';
+    deleteQuiz.addEventListener('click', async () => {
+        if (!window.confirm('Delete every question in this course quiz? Submitted attempts must be removed first.')) return;
+        try {
+            const deletion = await fetch('/api/courses/' + courseId + '/questions', { method: 'DELETE' });
+            const result = await deletion.json();
+            if (!deletion.ok) throw new Error(result.error || 'Unable to delete quiz.');
+            await loadQuizQuestions(courseId);
+        } catch (error) { alert(error.message); }
+    });
+    quizQuestionList.append(deleteQuiz);
     try {
         const response = await fetch('/api/courses/' + courseId + '/questions/manage');
         const data = await response.json();
