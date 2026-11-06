@@ -21,6 +21,7 @@ const lessonListCourseLabel = document.getElementById('lesson-list-course-label'
 
 const courseList = document.getElementById('instructor-course-list');
 const courseCount = document.getElementById('instructor-course-count');
+const quizQuestionList = document.getElementById('quiz-question-list');
 
 let instructorCourses = [];
 let requestedQuizCourseId = '';
@@ -102,7 +103,39 @@ function renderInstructorCourses() {
             showView('quiz-builder');
         });
 
-        card.append(number, title, description, action);
+        const edit = document.createElement('button');
+        edit.type = 'button';
+        edit.className = 'secondary-button';
+        edit.textContent = 'Edit course';
+        edit.addEventListener('click', async () => {
+            const nextTitle = window.prompt('Course title', course.title);
+            if (nextTitle === null) return;
+            const nextDescription = window.prompt('Course description', course.description || '');
+            if (nextDescription === null) return;
+            try {
+                const response = await fetch('/api/courses/' + course.id, {
+                    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: nextTitle, description: nextDescription })
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Unable to update course.');
+                await loadInstructorCourses();
+            } catch (error) { alert(error.message); }
+        });
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'secondary-button';
+        remove.textContent = 'Delete course';
+        remove.addEventListener('click', async () => {
+            if (!window.confirm('Delete "' + course.title + '" and its lessons and quiz? This cannot be undone.')) return;
+            try {
+                const response = await fetch('/api/courses/' + course.id, { method: 'DELETE' });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Unable to delete course.');
+                await loadInstructorCourses();
+            } catch (error) { alert(error.message); }
+        });
+        card.append(number, title, description, action, edit, remove);
         courseList.append(card);
     });
 }
@@ -214,7 +247,37 @@ async function loadLessons(courseId) {
             const content = document.createElement('p');
             content.textContent = lesson.content;
             content.className = 'lesson-body';
-            card.append(label, title, content);
+            const actions = document.createElement('div');
+            const edit = document.createElement('button');
+            edit.type = 'button'; edit.className = 'secondary-button'; edit.textContent = 'Edit lesson';
+            edit.addEventListener('click', async () => {
+                const nextTitle = window.prompt('Lesson title', lesson.title);
+                if (nextTitle === null) return;
+                const nextContent = window.prompt('Lesson content', lesson.content);
+                if (nextContent === null) return;
+                try {
+                    const response = await fetch('/api/courses/' + courseId + '/lessons/' + lesson.id, {
+                        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title: nextTitle, content: nextContent })
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error || 'Unable to update lesson.');
+                    await loadLessons(courseId);
+                } catch (error) { alert(error.message); }
+            });
+            const remove = document.createElement('button');
+            remove.type = 'button'; remove.className = 'secondary-button'; remove.textContent = 'Delete lesson';
+            remove.addEventListener('click', async () => {
+                if (!window.confirm('Delete lesson "' + lesson.title + '"?')) return;
+                try {
+                    const response = await fetch('/api/courses/' + courseId + '/lessons/' + lesson.id, { method: 'DELETE' });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error || 'Unable to delete lesson.');
+                    await loadLessons(courseId);
+                } catch (error) { alert(error.message); }
+            });
+            actions.append(edit, remove);
+            card.append(label, title, content, actions);
             lessonList.append(card);
         });
     } catch (error) {
@@ -262,6 +325,69 @@ lessonForm.addEventListener('submit', async event => {
         addLessonButton.innerHTML = 'Add lesson <span aria-hidden="true">→</span>';
     }
 });
+
+async function loadQuizQuestions(courseId) {
+    if (!quizQuestionList) return;
+    quizQuestionList.replaceChildren();
+    const heading = document.createElement('h2');
+    heading.textContent = 'Existing quiz questions';
+    quizQuestionList.append(heading);
+    try {
+        const response = await fetch('/api/courses/' + courseId + '/questions/manage');
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Unable to load questions.');
+        if (!data.questions.length) {
+            const empty = document.createElement('p');
+            empty.textContent = 'No quiz questions have been added yet.';
+            quizQuestionList.append(empty);
+            return;
+        }
+        data.questions.forEach(question => {
+            const item = document.createElement('article');
+            item.className = 'course-card';
+            const title = document.createElement('h3');
+            title.textContent = question.question_text;
+            const choices = document.createElement('p');
+            choices.textContent = question.choices.map(choice => (choice.is_correct ? '✓ ' : '') + choice.choice_text).join(' · ');
+            const edit = document.createElement('button');
+            edit.type = 'button'; edit.className = 'secondary-button'; edit.textContent = 'Edit question';
+            edit.addEventListener('click', async () => {
+                const nextQuestion = window.prompt('Question', question.question_text);
+                if (nextQuestion === null) return;
+                const nextChoices = question.choices.map(choice => choice.choice_text);
+                const updatedChoices = nextChoices.map((choice, index) => window.prompt('Answer choice ' + (index + 1), choice));
+                if (updatedChoices.some(choice => choice === null)) return;
+                const correctIndex = question.choices.findIndex(choice => choice.is_correct);
+                try {
+                    const update = await fetch('/api/courses/' + courseId + '/questions/' + question.id, {
+                        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ question: nextQuestion, choices: updatedChoices, correctIndex })
+                    });
+                    const result = await update.json();
+                    if (!update.ok) throw new Error(result.error || 'Unable to update question.');
+                    await loadQuizQuestions(courseId);
+                } catch (error) { alert(error.message); }
+            });
+            const remove = document.createElement('button');
+            remove.type = 'button'; remove.className = 'secondary-button'; remove.textContent = 'Delete question';
+            remove.addEventListener('click', async () => {
+                if (!window.confirm('Delete this quiz question?')) return;
+                try {
+                    const deletion = await fetch('/api/courses/' + courseId + '/questions/' + question.id, { method: 'DELETE' });
+                    const result = await deletion.json();
+                    if (!deletion.ok) throw new Error(result.error || 'Unable to delete question.');
+                    await loadQuizQuestions(courseId);
+                } catch (error) { alert(error.message); }
+            });
+            item.append(title, choices, edit, remove);
+            quizQuestionList.append(item);
+        });
+    } catch (error) {
+        const message = document.createElement('p');
+        message.textContent = error.message;
+        quizQuestionList.append(message);
+    }
+}
 
 async function checkInstructorAccess() {
     try {
@@ -356,6 +482,8 @@ courseForm.addEventListener('submit', async (event) => {
     }
 });
 
+quizCourse.addEventListener('change', () => { if (quizCourse.value) loadQuizQuestions(quizCourse.value); });
+
 quizForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     showQuizMessage();
@@ -424,6 +552,7 @@ quizForm.addEventListener('submit', async (event) => {
 
         const selectedCourseId = quizCourse.value;
         const selectedCourseTitle = quizCourse.selectedOptions[0].textContent;
+        await loadQuizQuestions(selectedCourseId);
 
         quizForm.reset();
         quizCourse.value = selectedCourseId;
