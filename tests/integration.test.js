@@ -291,10 +291,73 @@ test('LearnTrack authentication, lessons, quizzes and results', async () => {
             summary.body.courses.find(course => course.id === courseId).is_enrolled,
             1
         );
+
         assert.equal(
             summary.body.courses.find(course => course.id === courseId).description,
             'Course used for automated testing.'
         );
+
+        const updatedCourse = await request(`/api/courses/${courseId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ title: 'Updated Integration Testing', description: 'Updated description.' })
+        }, instructorCookie);
+        assert.equal(updatedCourse.response.status, 200);
+        assert.equal(updatedCourse.body.course.title, 'Updated Integration Testing');
+
+        const updatedLesson = await request(`/api/courses/${courseId}/lessons/1`, {
+            method: 'PUT',
+            body: JSON.stringify({ title: 'Updated Introduction', content: 'Updated lesson content.' })
+        }, instructorCookie);
+        assert.equal(updatedLesson.response.status, 200);
+
+        const questionManagement = await request(
+            `/api/courses/${courseId}/questions/manage`, {}, instructorCookie
+        );
+        assert.equal(questionManagement.response.status, 200);
+        assert.equal(questionManagement.body.questions.length, 2);
+
+        const blockedQuestionEdit = await request(`/api/courses/${courseId}/questions/${firstQuestion.id}`, {
+            method: 'PUT',
+            body: JSON.stringify({ question: 'Updated browser language?', choices: ['Python', 'JavaScript', 'C++'], correctIndex: 1 })
+        }, instructorCookie);
+        assert.equal(blockedQuestionEdit.response.status, 409);
+
+        const removedFirstAttempt = await request(`/api/courses/${courseId}/attempts/${firstAttempt.body.attempt.id}`, {
+            method: 'DELETE'
+        }, studentCookie);
+        assert.equal(removedFirstAttempt.response.status, 200);
+
+        const removedSecondAttempt = await request(`/api/courses/${courseId}/attempts/${secondAttempt.body.attempt.id}`, {
+            method: 'DELETE'
+        }, studentCookie);
+        assert.equal(removedSecondAttempt.response.status, 200);
+
+        const emptyHistory = await request(
+            `/api/courses/${courseId}/attempts/mine`, {}, studentCookie
+        );
+        assert.equal(emptyHistory.body.attempts.length, 0);
+
+        const updatedQuestion = await request(`/api/courses/${courseId}/questions/${firstQuestion.id}`, {
+            method: 'PUT',
+            body: JSON.stringify({ question: 'Updated browser language?', choices: ['Python', 'JavaScript', 'C++'], correctIndex: 1 })
+        }, instructorCookie);
+        assert.equal(updatedQuestion.response.status, 200);
+
+        const deletedQuestion = await request(`/api/courses/${courseId}/questions/${firstQuestion.id}`, {
+            method: 'DELETE'
+        }, instructorCookie);
+        assert.equal(deletedQuestion.response.status, 200);
+
+        const deletedLesson = await request(`/api/courses/${courseId}/lessons/1`, {
+            method: 'DELETE'
+        }, instructorCookie);
+        assert.equal(deletedLesson.response.status, 200);
+
+        const deletedCourse = await request(`/api/courses/${courseId}`, {
+            method: 'DELETE'
+        }, instructorCookie);
+        assert.equal(deletedCourse.response.status, 200);
+
 
         const instructorHistory = await request(
             `/api/courses/${courseId}/attempts/mine`, {}, instructorCookie
