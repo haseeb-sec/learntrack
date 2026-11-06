@@ -14,6 +14,7 @@ flowchart TD
     F --> G[Create multiple-choice quiz]
     G --> H[Publish learning content]
     H --> I([End])
+```
 
 ## Student workflow
 
@@ -28,3 +29,4 @@ flowchart TD
     G --> H[Attempt quiz]
     H --> I[Receive calculated score]
     I --> J([End])
+```

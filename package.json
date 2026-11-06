@@ -2,11 +2,12 @@
   "name": "learntrack",
   "version": "1.0.0",
   "description": "Student Learning and Quiz Management System",
-  "main": "index.js",
+  "main": "src/server.js",
   "scripts": {
     "test": "node --test",
     "dev": "node --watch src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "seed": "node src/database/seed.js"
   },
   "keywords": [],
   "author": "",
