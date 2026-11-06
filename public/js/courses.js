@@ -291,10 +291,9 @@ async function enrollInCourse(course, button) {
 }
 
 async function openLessons(course) {
-    const requestId = ++quizRequestId;
     activeCourseId = course.id;
-
     showView('lessons');
+    const requestId = ++quizRequestId;
 
     document.getElementById('lesson-title').textContent = course.title;
     document.getElementById('lesson-description').textContent =
