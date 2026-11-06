@@ -24,9 +24,12 @@ flowchart TD
     B --> C[Register or sign in]
     C --> D[Student]
     D --> E[Browse available courses]
-    E --> F[Open a course]
-    F --> G[Read lessons]
-    G --> H[Attempt quiz]
-    H --> I[Receive calculated score]
-    I --> J([End])
+    E --> F[Select a course]
+    F --> G[Enroll in the course]
+    G --> H[View course description and details]
+    H --> I[Read lessons]
+    I --> J[Attempt quiz]
+    J --> K[Receive and save calculated score]
+    K --> L[Review attempt history]
+    L --> M([End])
 ```

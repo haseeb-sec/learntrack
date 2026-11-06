@@ -52,11 +52,7 @@ function showView(viewName) {
         view.hidden = view.id !== `${viewName}-view`;
     });
 
-    document.getElementById('back-from-lessons').addEventListener('click', () => {
-    showView('courses');
-});
-
-document.querySelectorAll('[data-view]').forEach(button => {
+    document.querySelectorAll('[data-view]').forEach(button => {
         const active = button.dataset.view === viewName;
         button.classList.toggle('active', active);
 
@@ -112,7 +108,7 @@ function renderOverview(data) {
     const summary = data.summary || {};
     const stats = [
         ['COURSES AVAILABLE', summary.availableCourses ?? 0],
-        ['COURSES ATTEMPTED', summary.attemptedCourses ?? 0],
+        ['COURSES ENROLLED', summary.enrolledCourses ?? 0],
         ['QUIZ ATTEMPTS', summary.totalAttempts ?? 0]
     ];
 
@@ -207,63 +203,63 @@ async function loadCourses() {
 
             const label = document.createElement('span');
             label.className = 'course-label';
-            label.textContent = 'AVAILABLE COURSE';
+            label.textContent = course.is_enrolled ? 'ENROLLED COURSE' : 'AVAILABLE COURSE';
 
             const title = document.createElement('h3');
             title.textContent = course.title;
 
             const description = document.createElement('p');
-            description.textContent =
-                course.description || 'Explore this course and test your knowledge.';
-
-            const metadata = document.createElement('div');
-            metadata.className = 'course-card-meta';
-
-            const questionCount = Number(course.question_count) || 0;
-            const questionInfo = document.createElement('span');
-            questionInfo.textContent =
-                `${questionCount} ${questionCount === 1 ? 'question' : 'questions'}`;
-
-            const attemptInfo = document.createElement('span');
-            const attemptCount = Number(course.attempt_count) || 0;
-
-            if (attemptCount === 0) {
-                attemptInfo.textContent = 'Not attempted yet';
-            } else {
-                attemptInfo.textContent =
-                    `${attemptCount} ${attemptCount === 1 ? 'attempt' : 'attempts'} · ` +
-                    `Latest ${course.last_score}/${course.last_total_questions} ` +
-                    `(${course.last_percentage}%)`;
-            }
-
-            metadata.append(questionInfo, attemptInfo);
+            description.className = 'course-description';
+            description.textContent = course.description || 'No course description provided.';
 
             const instructor = document.createElement('p');
             instructor.className = 'course-instructor';
-            instructor.textContent =
-                `Instructor: ${course.instructor || 'LearnTrack instructor'}`;
+            instructor.textContent = `Instructor: ${course.instructor || 'LearnTrack instructor'}`;
 
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = 'primary-button';
+            const metadata = document.createElement('div');
+            metadata.className = 'course-card-meta';
+            const questionCount = Number(course.question_count) || 0;
+            const questionInfo = document.createElement('span');
+            questionInfo.textContent = `${questionCount} ${questionCount === 1 ? 'quiz question' : 'quiz questions'}`;
+            metadata.appendChild(questionInfo);
 
-            if (questionCount === 0) {
-                button.textContent = 'Quiz not available yet';
-                button.disabled = true;
+            const actions = document.createElement('div');
+            actions.className = 'course-card-actions';
+
+            if (!course.is_enrolled) {
+                const enrollButton = document.createElement('button');
+                enrollButton.type = 'button';
+                enrollButton.className = 'primary-button';
+                enrollButton.textContent = 'Enroll in course';
+                enrollButton.addEventListener('click', () => enrollInCourse(course, enrollButton));
+                actions.appendChild(enrollButton);
             } else {
-                button.textContent = attemptCount > 0
-                    ? 'Practise again'
-                    : 'Open course quiz';
-                button.addEventListener('click', () => openQuiz(course));
+                const lessonsButton = document.createElement('button');
+                lessonsButton.type = 'button';
+                lessonsButton.className = 'secondary-button';
+                lessonsButton.textContent = 'View course lessons';
+                lessonsButton.addEventListener('click', () => openLessons(course));
+                actions.appendChild(lessonsButton);
+
+                const quizButton = document.createElement('button');
+                quizButton.type = 'button';
+                quizButton.className = 'primary-button';
+                quizButton.textContent = questionCount > 0 ? 'Take course quiz' : 'Quiz not available yet';
+                quizButton.disabled = questionCount === 0;
+                if (questionCount > 0) {
+                    quizButton.addEventListener('click', () => openQuiz(course));
+                }
+                actions.appendChild(quizButton);
+
+                const attemptCount = Number(course.attempt_count) || 0;
+                const attemptInfo = document.createElement('span');
+                attemptInfo.textContent = attemptCount === 0
+                    ? 'No quiz attempts yet'
+                    : `${attemptCount} attempt(s) · Latest ${course.last_score}/${course.last_total_questions} (${course.last_percentage}%)`;
+                metadata.appendChild(attemptInfo);
             }
 
-            const lessonsButton = document.createElement('button');
-            lessonsButton.type = 'button';
-            lessonsButton.className = 'secondary-button';
-            lessonsButton.textContent = 'Read lessons';
-            lessonsButton.addEventListener('click', () => openLessons(course));
-
-            card.append(label, title, description, metadata, instructor, button, lessonsButton);
+            card.append(label, title, description, instructor, metadata, actions);
             courseList.appendChild(card);
         });
     } catch (error) {
@@ -274,6 +270,23 @@ async function loadCourses() {
         courseCount.textContent = 'Courses unavailable';
         courseList.setAttribute('aria-busy', 'false');
         showMessage(courseList, error.message);
+    }
+}
+
+async function enrollInCourse(course, button) {
+    button.disabled = true;
+    button.textContent = 'Enrolling...';
+
+    try {
+        const response = await fetch(`/api/courses/${course.id}/enroll`, {
+            method: 'POST'
+        });
+        await readResponse(response);
+        await loadCourses();
+    } catch (error) {
+        button.disabled = false;
+        button.textContent = 'Enroll in course';
+        alert(error.message);
     }
 }
 
@@ -315,7 +328,7 @@ async function openLessons(course) {
 
             const content = document.createElement('p');
             content.textContent = lesson.content;
-            content.style.whiteSpace = 'pre-wrap';
+            content.className = 'lesson-body';
 
             article.append(label, heading, content);
             lessonContent.append(article);
@@ -633,6 +646,10 @@ document.querySelectorAll('[data-view]').forEach(button => {
     button.addEventListener('click', () => {
         showView(button.dataset.view);
     });
+});
+
+document.getElementById('back-from-lessons')?.addEventListener('click', () => {
+    showView('courses');
 });
 
 document.getElementById('back-to-courses')?.addEventListener('click', () => {

@@ -4,6 +4,21 @@ const { requireRole } = require('../middleware/auth');
 
 const router = express.Router();
 
+function requireEnrollment(req, res, next) {
+    const courseId = Number(req.params.courseId);
+    const enrollment = db.prepare(
+        'SELECT id FROM enrollments WHERE student_id = ? AND course_id = ?'
+    ).get(req.user.id, courseId);
+
+    if (!enrollment) {
+        return res.status(403).json({
+            error: 'Enroll in this course before accessing its lessons or quizzes.'
+        });
+    }
+
+    next();
+}
+
 // Public: list all courses.
 router.get('/', (req, res) => {
     try {
@@ -92,6 +107,11 @@ router.get('/student/summary', requireRole('student'), (req, res) => {
                 courses.id,
                 courses.title,
                 courses.description,
+                EXISTS (
+                    SELECT 1 FROM enrollments
+                    WHERE enrollments.course_id = courses.id
+                      AND enrollments.student_id = ?
+                ) AS is_enrolled,
                 courses.created_at,
                 users.name AS instructor,
                 (
@@ -145,6 +165,7 @@ router.get('/student/summary', requireRole('student'), (req, res) => {
             req.user.id,
             req.user.id,
             req.user.id,
+            req.user.id,
             req.user.id
         );
 
@@ -167,6 +188,7 @@ router.get('/student/summary', requireRole('student'), (req, res) => {
 
         const summary = {
             availableCourses: courses.length,
+            enrolledCourses: courses.filter(course => course.is_enrolled).length,
             attemptedCourses: courses.filter(course => course.attempt_count > 0).length,
             totalAttempts: attempts.length
         };
@@ -189,7 +211,7 @@ router.get('/student/summary', requireRole('student'), (req, res) => {
 router.get('/mine', requireRole('instructor'), (req, res) => {
     try {
         const courses = db.prepare(`
-            SELECT id, title
+            SELECT id, title, description
             FROM courses
             WHERE instructor_id = ?
             ORDER BY id DESC
@@ -202,8 +224,39 @@ router.get('/mine', requireRole('instructor'), (req, res) => {
     }
 });
 
+// Student: enroll in a course before accessing its learning content.
+router.post('/:courseId/enroll', requireRole('student'), (req, res) => {
+    try {
+        const courseId = Number(req.params.courseId);
+        if (!Number.isSafeInteger(courseId) || courseId < 1) {
+            return res.status(400).json({ error: 'Invalid course ID.' });
+        }
+
+        const course = db.prepare('SELECT id FROM courses WHERE id = ?').get(courseId);
+        if (!course) {
+            return res.status(404).json({ error: 'Course not found.' });
+        }
+
+        const result = db.prepare(
+            'INSERT OR IGNORE INTO enrollments (student_id, course_id) VALUES (?, ?)'
+        ).run(req.user.id, courseId);
+
+        const enrollment = db.prepare(
+            'SELECT id, student_id, course_id, enrolled_at FROM enrollments WHERE student_id = ? AND course_id = ?'
+        ).get(req.user.id, courseId);
+
+        return res.status(result.changes ? 201 : 200).json({
+            message: result.changes ? 'Successfully enrolled in course.' : 'You are already enrolled in this course.',
+            enrollment
+        });
+    } catch (error) {
+        console.error('Failed to enroll student:', error.message);
+        return res.status(500).json({ error: 'Unable to enroll in this course.' });
+    }
+});
+
 // Public: retrieve quiz questions and choices without exposing correct answers.
-router.get('/:courseId/questions', requireRole('student'), (req, res) => {
+router.get('/:courseId/questions', requireRole('student'), requireEnrollment, (req, res) => {
     try {
         const courseId = Number(req.params.courseId);
 
@@ -348,7 +401,7 @@ router.post('/:courseId/questions', requireRole('instructor'), (req, res) => {
 
 
 // Student only: submit a quiz. The server validates answers and calculates the score.
-router.post('/:courseId/attempts', requireRole('student'), (req, res) => {
+router.post('/:courseId/attempts', requireRole('student'), requireEnrollment, (req, res) => {
     try {
         const courseId = Number(req.params.courseId);
         const { answers } = req.body;
@@ -474,7 +527,7 @@ router.post('/:courseId/attempts', requireRole('student'), (req, res) => {
 });
 
 // Student only: retrieve this student's attempts for a course.
-router.get('/:courseId/attempts/mine', requireRole('student'), (req, res) => {
+router.get('/:courseId/attempts/mine', requireRole('student'), requireEnrollment, (req, res) => {
     try {
         const courseId = Number(req.params.courseId);
 
@@ -511,7 +564,7 @@ router.get('/:courseId/attempts/mine', requireRole('student'), (req, res) => {
 
 
 // Students can read published text lessons for an available course.
-router.get('/:courseId/lessons', requireRole('student'), (req, res) => {
+router.get('/:courseId/lessons', requireRole('student'), requireEnrollment, (req, res) => {
     try {
         const courseId = Number(req.params.courseId);
         if (!Number.isSafeInteger(courseId) || courseId < 1) {

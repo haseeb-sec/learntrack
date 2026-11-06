@@ -286,6 +286,15 @@ test('LearnTrack authentication, lessons, quizzes and results', async () => {
         const summary = await request('/api/courses/student/summary', {}, studentCookie);
         assert.equal(summary.response.status, 200);
         assert.equal(summary.body.summary.totalAttempts, 2);
+        assert.equal(summary.body.summary.enrolledCourses, 1);
+        assert.equal(
+            summary.body.courses.find(course => course.id === courseId).is_enrolled,
+            1
+        );
+        assert.equal(
+            summary.body.courses.find(course => course.id === courseId).description,
+            'Course used for automated testing.'
+        );
 
         const instructorHistory = await request(
             `/api/courses/${courseId}/attempts/mine`, {}, instructorCookie
