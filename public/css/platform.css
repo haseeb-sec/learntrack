@@ -1940,3 +1940,62 @@
         padding: 35px 6% 55px;
     }
 }
+
+
+/* Course enrollment, course details and readable lesson material */
+.course-description,
+.lesson-body {
+    color: #555e57;
+    font-size: 14px;
+    line-height: 1.95;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+.course-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.course-card-actions button {
+    min-height: 42px;
+}
+
+.lesson-body {
+    max-width: 78ch;
+    margin-top: 12px;
+    padding: 22px 24px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fbfcf9;
+    color: #343b34;
+    font-size: 15px;
+    line-height: 2;
+}
+
+#lesson-content {
+    display: grid;
+    gap: 18px;
+}
+
+#lesson-content .course-card {
+    min-height: 0;
+}
+
+@media (max-width: 650px) {
+    .lesson-body {
+        padding: 17px;
+        font-size: 14px;
+        line-height: 1.85;
+    }
+
+    .course-card-actions {
+        flex-direction: column;
+    }
+
+    .course-card-actions button {
+        width: 100%;
+    }
+}
