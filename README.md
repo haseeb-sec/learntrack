@@ -17,8 +17,9 @@ LearnTrack is a full-stack learning platform for small learning centers. It prov
 - Create multiple-choice questions with one correct answer per question.
 
 ### Student
-- Browse available courses.
-- Read course lessons.
+- Browse available courses and view course descriptions.
+- Enroll in a course before accessing its learning content.
+- Read lessons and view enrolled course details.
 - Attempt quizzes and submit answers.
 - View automatically calculated scores and previous attempts.
 
@@ -160,14 +161,15 @@ learntrack/
 | POST | /api/auth/logout | Signed in | Sign out |
 | GET | /api/courses | Public | Browse courses |
 | POST | /api/courses | Instructor | Create a course |
+| POST | /api/courses/:courseId/enroll | Student | Enroll in a course |
 | GET | /api/courses/mine | Instructor | List owned courses |
 | POST | /api/courses/:courseId/lessons | Instructor | Add a lesson |
 | GET | /api/courses/:courseId/lessons/manage | Instructor | Manage owned course lessons |
-| GET | /api/courses/:courseId/lessons | Student | Read course lessons |
+| GET | /api/courses/:courseId/lessons | Enrolled student | Read course lessons |
 | POST | /api/courses/:courseId/questions | Instructor | Add a quiz question |
-| GET | /api/courses/:courseId/questions | Student | Retrieve quiz questions |
-| POST | /api/courses/:courseId/attempts | Student | Submit a quiz |
-| GET | /api/courses/:courseId/attempts/mine | Student | View own attempt history |
+| GET | /api/courses/:courseId/questions | Enrolled student | Retrieve quiz questions |
+| POST | /api/courses/:courseId/attempts | Enrolled student | Submit a quiz |
+| GET | /api/courses/:courseId/attempts/mine | Enrolled student | View own attempt history |
 | GET | /api/courses/student/summary | Student | View learning summary |
 
 All quiz scores are calculated by the server. Student endpoints return only the signed-in student's results.
