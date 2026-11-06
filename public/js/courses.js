@@ -626,7 +626,20 @@ async function loadResults() {
             attemptLabel.textContent = `Attempt ${attemptNumber}`;
 
             details.append(course, date);
-            item.append(details, score, attemptLabel);
+            const removeAttempt = document.createElement('button');
+            removeAttempt.type = 'button';
+            removeAttempt.className = 'secondary-button';
+            removeAttempt.textContent = 'Remove mistaken attempt';
+            removeAttempt.addEventListener('click', async () => {
+                if (!window.confirm('Remove this quiz attempt from your history?')) return;
+                try {
+                    const response = await fetch('/api/courses/' + attempt.courseId + '/attempts/' + attempt.id, { method: 'DELETE' });
+                    const result = await readResponse(response);
+                    if (!response.ok) throw new Error(result.error || 'Unable to remove attempt.');
+                    await loadResults();
+                } catch (error) { alert(error.message); }
+            });
+            item.append(details, score, attemptLabel, removeAttempt);
             list.appendChild(item);
         });
 
